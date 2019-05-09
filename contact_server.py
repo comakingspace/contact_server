@@ -30,18 +30,6 @@ class Mail:
         self.message['Subject'] = f"Contact from {data['name']}"
         self.message['Date'] = utils.formatdate(localtime=True)
         self.message['Message-ID'] = utils.make_msgid()
-#         message_text = f"""
-# Hello Space,
-#
-# a new contact message from {data['name']} has been received:
-#
-# -------------------------------------------------------
-# {escape(data['message'])}
-# -------------------------------------------------------
-#
-# Yours Truly,
-# Contact Fomular on the Website
-#         """
         self.message.set_content(config.message_text
             .format_map({
             'name'           : data['name'],
@@ -50,7 +38,6 @@ class Mail:
 
     def send(self):
         '''Sends an email'''
-        # sys.stdout.buffer.write(self.message.as_bytes())
         smtp = SMTP(config.smtp_server, port=config.smtp_port)
         smtp.starttls()
         smtp.login(config.email_sender, config.email_password)
