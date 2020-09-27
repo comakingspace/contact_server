@@ -47,11 +47,21 @@ class Mail:
 
 
 class ContactRequest(BaseHTTPRequestHandler):
-    def _send_response(self, code, json_message='{}'):
+    def _send_response(self, code, json_message='{}', conf=config):
         self.send_response(code)
         self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', conf.allowed_domains)
         self.end_headers()
         self.wfile.write(json_message.encode("utf-8"))
+
+    def do_OPTIONS(self, conf=config):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', conf.allowed_domains)
+        self.send_header('Access-Control-Request-Method', 'POST')
+        self.send_header('Access-Control-Max-Age', '86400')
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
 
     def do_POST(self):
         content_type = self.headers['content-type']
@@ -121,4 +131,3 @@ if __name__ == "__main__":
         run(handler_class=ContactRequest)
     elif config.mode == 'ip':
         run(handler_class=ContactRequestWithIpLimiter)
-
