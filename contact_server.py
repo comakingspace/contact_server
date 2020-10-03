@@ -47,16 +47,22 @@ class Mail:
 
 
 class ContactRequest(BaseHTTPRequestHandler):
-    def _send_response(self, code, json_message='{}', conf=config):
+    def _send_response(self, code, json_message='{}'):
         self.send_response(code)
+        self._check_origin()
         self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', conf.allowed_domains)
         self.end_headers()
         self.wfile.write(json_message.encode("utf-8"))
 
-    def do_OPTIONS(self, conf=config):
+    def _check_origin(self, conf=config):
+        origin = self.headers['Origin']
+        isAllowed = True in [bool(re.search(pattern, origin)) for pattern in conf.allowed_domains]
+        if isAllowed:
+            self.send_header('Access-Control-Allow-Origin', '*')
+
+    def do_OPTIONS(self):
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', conf.allowed_domains)
+        self._check_origin()
         self.send_header('Access-Control-Request-Method', 'POST')
         self.send_header('Access-Control-Max-Age', '86400')
         self.send_header('Content-Type', 'application/json')
