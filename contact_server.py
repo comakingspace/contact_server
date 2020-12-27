@@ -55,7 +55,7 @@ class ContactRequest(BaseHTTPRequestHandler):
         self.wfile.write(json_message.encode("utf-8"))
 
     def _check_origin(self, conf=config):
-        origin = self.headers['Origin']
+        origin = self.headers['Origin'] or 'Unknown'
         isAllowed = True in [bool(re.search(pattern, origin)) for pattern in conf.allowed_domains]
         if isAllowed:
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -75,6 +75,11 @@ class ContactRequest(BaseHTTPRequestHandler):
         pared_body = body_to_object(content_type, post_body)
         res = handle_post(pared_body)
         self._send_response(res.code, res.message)
+
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'Healthy')
 
 
 class ContactRequestWithIpLimiter(ContactRequest):

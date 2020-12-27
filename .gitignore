@@ -2,3 +2,5 @@ configuration.py
 .idea
 .code
 __pycache__
+docker-compose.yml
+Dockerfile
