@@ -6,6 +6,7 @@ smtp_port = 587
 server_port = 80
 mode = 'default'
 allowed_domains = ['.*']
+ip_source = 'default'
 
 message_text = """
 Hello Space,

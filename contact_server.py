@@ -92,9 +92,18 @@ class ContactRequestWithIpLimiter(ContactRequest):
                 continue
             del self.ips[key]
 
+    def get_ip(self, conf=config):
+        source = conf.ip_source
+        if source == 'default' or not source:
+            return self.address_string()
+        else:
+            return self.headers[source]
+
+
+
     def do_POST(self):
         self.clear_ips()
-        ip = self.address_string()
+        ip = self.get_ip()
         time: datetime = self.ips.get(ip)
         if time:
             return self._send_response(429, json.dumps({'message': 'Too many requests'}))
