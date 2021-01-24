@@ -3,4 +3,3 @@ configuration.py
 .code
 __pycache__
 docker-compose.yml
-Dockerfile

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from datetime import datetime, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import unquote
+from urllib.parse import unquote_plus
 import json
 import re
 from html import escape
@@ -63,6 +63,31 @@ class ContactRequest(BaseHTTPRequestHandler):
         if isAllowed:
             self.send_header('Access-Control-Allow-Origin', '*')
 
+    def _handle_post(self, data):
+        has_content = True in [field in data for field in config.fields]
+        if not data.get('name') or not data.get('email') or not has_content:
+            return FormResponse(400, "Cannot send empty message")
+
+        if not re.search(email_regex, data.get('email')):
+            return FormResponse(400, "Invalid Email")
+
+        try:
+            mail = Mail(data)
+            mail.send()
+            return FormResponse(200, "OK")
+        except Exception as e:
+            print(e)
+            return FormResponse(400, "Could not send")
+
+    def _body_to_object(self, content_type: str, body):
+        if 'application/json' in content_type:
+            obj = json.loads(body)
+            return obj
+        elif 'application/x-www-form-urlencoded' in content_type:
+            return {key: unquote_plus(value) for key, value in [elem.split('=') for elem in body.split('&')]}
+        else:
+            return {}
+
     def do_OPTIONS(self):
         self.send_response(200)
         self._check_origin()
@@ -75,8 +100,8 @@ class ContactRequest(BaseHTTPRequestHandler):
     def do_POST(self):
         content_type = self.headers['content-type']
         post_body = self.rfile.read(int(self.headers['content-length'])).decode('utf-8')
-        pared_body = body_to_object(content_type, post_body)
-        res = handle_post(pared_body)
+        parsed_body = self._body_to_object(content_type, post_body)
+        res = self._handle_post(parsed_body)
         self._send_response(res.code, res.message)
 
     def do_GET(self):
@@ -112,33 +137,6 @@ class ContactRequestWithIpLimiter(ContactRequest):
             self.ips[ip] = datetime.today()
 
         return super().do_POST()
-
-
-def body_to_object(content_type: str, body):
-    if 'application/json' in content_type:
-        obj = json.loads(body)
-        return obj
-    elif 'application/x-www-form-urlencoded' in content_type:
-        return {key: unquote(value) for key, value in [elem.split('=') for elem in body.split('&')]}
-    else:
-        return {}
-
-
-def handle_post(data):
-    if "name" not in data or "email" not in data or "message" not in data:
-        return FormResponse(400, "Form Incomplete")
-    if not re.search(email_regex, data['email']):
-        return FormResponse(400, "Invalid Email")
-    if not data['name'] or not data['email'] or not data['message']:
-        return FormResponse(400, "Cannot send empty message")
-
-    try:
-        mail = Mail(data)
-        mail.send()
-        return FormResponse(200, "OK")
-    except Exception as e:
-        print(e)
-        return FormResponse(400, "Could not send")
 
 
 def run(server_class=HTTPServer, handler_class=BaseHTTPRequestHandler):
