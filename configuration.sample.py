@@ -7,6 +7,9 @@ server_port = 80
 mode = 'default'
 allowed_domains = ['.*']
 ip_source = 'default'
+fields = {
+    'message': 'Message',
+    }
 
 message_text = """
 Hello Space,
@@ -14,7 +17,7 @@ Hello Space,
 a new contact message from {name} has been received:
 
 -------------------------------------------------------
-{message_content}
+{message}
 -------------------------------------------------------
 
 Yours Truly,

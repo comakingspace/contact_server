@@ -28,13 +28,16 @@ class Mail:
         self.message['To'] = config.email_to
         self.message['From'] = config.email_sender
         self.message['Reply-To'] = data['email']
-        self.message['Subject'] = f"Contact from {data['name']}"
+        self.message['Subject'] = data.get('subject') or f"Contact from {data['name']}"
         self.message['Date'] = utils.formatdate(localtime=True)
         self.message['Message-ID'] = utils.make_msgid()
+
+        content = "\n\n".join([f"{name}: \n{escape(data.get(key))}" for key, name in config.fields.items()])
+
         self.message.set_content(config.message_text
             .format_map({
             'name': data['name'],
-            'message_content': escape(data['message'])
+            'content': content
             }))
 
     def send(self):
@@ -98,8 +101,6 @@ class ContactRequestWithIpLimiter(ContactRequest):
             return self.address_string()
         else:
             return self.headers[source]
-
-
 
     def do_POST(self):
         self.clear_ips()
