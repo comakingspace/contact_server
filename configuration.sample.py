@@ -1,3 +1,5 @@
+# start_tls or ssl
+email_delivery = ""
 email_sender = ""
 email_password = ""
 email_to = ""

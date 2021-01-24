@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from datetime import datetime, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from urllib.parse import unquote_plus
 import json
 import re
 from html import escape
-from smtplib import SMTP
+from smtplib import SMTP, SMTP_SSL
 from email.message import EmailMessage
 from email import utils
 import configuration as config
@@ -40,13 +41,26 @@ class Mail:
             'content': content
             }))
 
-    def send(self):
-        '''Sends an email'''
+    def _send_start_tls(self):
         smtp = SMTP(config.smtp_server, port=config.smtp_port)
         smtp.starttls()
         smtp.login(config.email_sender, config.email_password)
         smtp.send_message(self.message)
         smtp.close()
+
+    def _send_ssl(self):
+        smtp = SMTP_SSL(config.smtp_server, port=config.smtp_port)
+        smtp.login(config.email_sender, config.email_password)
+        smtp.send_message(self.message)
+        smtp.close()
+
+    def send(self):
+        '''Sends an email'''
+        if config.email_delivery == 'ssl':
+            self._send_ssl()
+        else:
+            self._send_start_tls()
+
 
 
 class ContactRequest(BaseHTTPRequestHandler):
@@ -138,8 +152,14 @@ class ContactRequestWithIpLimiter(ContactRequest):
 
         return super().do_POST()
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """
+    Handle requests in a separate thread.
+    Ref: https://pymotw.com/2/BaseHTTPServer/index.html#threading-and-forking
+    """
 
-def run(server_class=HTTPServer, handler_class=BaseHTTPRequestHandler):
+
+def run(server_class=ThreadedHTTPServer, handler_class=BaseHTTPRequestHandler):
     server_address = ('', config.server_port)
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()
