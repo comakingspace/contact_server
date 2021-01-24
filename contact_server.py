@@ -11,7 +11,7 @@ from email.message import EmailMessage
 from email import utils
 import configuration as config
 
-email_regex = r"\A[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+email_regex = r"\A[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?"
 
 
 class FormResponse:
@@ -62,7 +62,6 @@ class Mail:
             self._send_start_tls()
 
 
-
 class ContactRequest(BaseHTTPRequestHandler):
     def _send_response(self, code, json_message='{}'):
         self.send_response(code)
@@ -94,12 +93,16 @@ class ContactRequest(BaseHTTPRequestHandler):
             return FormResponse(400, "Could not send")
 
     def _body_to_object(self, content_type: str, body):
-        if 'application/json' in content_type:
-            obj = json.loads(body)
-            return obj
-        elif 'application/x-www-form-urlencoded' in content_type:
-            return {key: unquote_plus(value) for key, value in [elem.split('=') for elem in body.split('&')]}
-        else:
+        try:
+            if 'application/json' in content_type:
+                obj = json.loads(body)
+                return obj
+            elif 'application/x-www-form-urlencoded' in content_type:
+                return {key: unquote_plus(value) for key, value in [elem.split('=') for elem in body.split('&')]}
+            else:
+                return {}
+        except Exception as e:
+            print(e)
             return {}
 
     def do_OPTIONS(self):
@@ -151,6 +154,7 @@ class ContactRequestWithIpLimiter(ContactRequest):
             self.ips[ip] = datetime.today()
 
         return super().do_POST()
+
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """
