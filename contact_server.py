@@ -33,7 +33,7 @@ class Mail:
         self.message['Date'] = utils.formatdate(localtime=True)
         self.message['Message-ID'] = utils.make_msgid()
 
-        content = "\n\n".join([f"{name}: \n{escape(data.get(key))}" for key, name in config.fields.items()])
+        content = "\n\n".join([f"{name}: \n{escape(data.get(key))}" for key, name in config.fields.items() if key in data])
 
         self.message.set_content(config.message_text
             .format_map({
