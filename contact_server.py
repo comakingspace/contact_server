@@ -116,6 +116,11 @@ class ContactRequest(BaseHTTPRequestHandler):
         return isAllowed
 
     def _handle_post(self, data):
+        # Hopefully filter out spam messages
+        if config.spam_filter_field:
+            if (config.spam_filter_field in data and data[config.spam_filter_field]) or config.spam_filter_field not in data:
+                return FormResponse(200, "OK")
+
         has_content = True in [field in data for field in config.fields]
 
         if not data.get('name') or not data.get('email') or not has_content:

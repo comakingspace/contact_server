@@ -23,6 +23,11 @@ mode = 'default'
 # any other value defines the header where the ip could be found
 ip_source = 'default'
 
+# If this field is filled then no email is sent
+# If this field is not sent to the server no email is sent
+# To disable set to none
+spam_filter_field = 'filter'
+
 # Allowed cors header domains
 allowed_domains = ['.*']
 
