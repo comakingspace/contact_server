@@ -28,6 +28,9 @@ ip_source = 'default'
 # To disable set to none
 spam_filter_field = 'filter'
 
+# This is the value that the spam filter allows through
+spam_field_value = 'i am not a bot'
+
 # Allowed cors header domains
 allowed_domains = ['.*']
 

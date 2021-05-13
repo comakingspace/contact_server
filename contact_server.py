@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import random
+import time
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
@@ -118,7 +120,9 @@ class ContactRequest(BaseHTTPRequestHandler):
     def _handle_post(self, data):
         # Hopefully filter out spam messages
         if config.spam_filter_field:
-            if (config.spam_filter_field in data and data[config.spam_filter_field]) or config.spam_filter_field not in data:
+            if (config.spam_filter_field in data and data[config.spam_filter_field]) != config.spam_field_value or config.spam_filter_field not in data:
+                wait = random.randrange(400, 800)
+                time.sleep(wait / 1000)
                 return FormResponse(200, "OK")
 
         has_content = True in [field in data for field in config.fields]
